@@ -1,2 +1,13 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# UTF-8 text policy for CAPSTONE
+* text=auto eol=lf
+*.c text working-tree-encoding=UTF-8
+*.cc text working-tree-encoding=UTF-8
+*.cpp text working-tree-encoding=UTF-8
+*.cxx text working-tree-encoding=UTF-8
+*.h text working-tree-encoding=UTF-8
+*.hpp text working-tree-encoding=UTF-8
+*.cmake text working-tree-encoding=UTF-8
+*.md text working-tree-encoding=UTF-8
+*.xml text working-tree-encoding=UTF-8
+*.html text working-tree-encoding=UTF-8
+*.sh text working-tree-encoding=UTF-8
