@@ -3,6 +3,8 @@ name: CAPSTONE - Build macOS Installer
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
@@ -31,27 +33,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Determine version
         id: version
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
-          else
-            echo "version=0.0.0-dev+${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-          fi
-
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then VERSION="${GITHUB_REF#refs/tags/v}"; else VERSION="1.0.0-build.${GITHUB_SHA::7}"; fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
       - name: Detect signing credentials
         id: signing
         env:
           CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
         run: |
-          if [[ -n "$CERT_P12" ]]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-          fi
-
+          if [[ -n "$CERT_P12" ]]; then echo "enabled=true" >> "$GITHUB_OUTPUT"; else echo "enabled=false" >> "$GITHUB_OUTPUT"; fi
       - name: Import Developer ID certificate
         if: steps.signing.outputs.enabled == 'true'
         env:
@@ -62,11 +55,9 @@ jobs:
           security create-keychain -p runner build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p runner build.keychain
-          security import /tmp/cert.p12 -k build.keychain -P "$CERT_PASS" \
-            -T /usr/bin/codesign -T /usr/bin/productsign
+          security import /tmp/cert.p12 -k build.keychain -P "$CERT_PASS" -T /usr/bin/codesign -T /usr/bin/productsign
           security set-key-partition-list -S apple-tool:,apple: -s -k runner build.keychain
           rm -f /tmp/cert.p12
-
       - name: Build installer
         working-directory: CAPSTONE
         env:
@@ -76,14 +67,12 @@ jobs:
         run: |
           chmod +x packaging/build_installer.sh packaging/scripts/postinstall
           ./packaging/build_installer.sh
-
       - name: Collect plugin bundles
         working-directory: CAPSTONE
         run: |
           mkdir -p dist
           cd build/CAPSTONE_artefacts/Release
           zip -qry "$GITHUB_WORKSPACE/CAPSTONE/dist/CAPSTONE-macOS-bundles.zip" AU VST3 Standalone
-
       - name: Upload installer artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -91,23 +80,18 @@ jobs:
           path: CAPSTONE/dist/*
           if-no-files-found: error
           retention-days: 30
-
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: CAPSTONE ${{ steps.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
           files: |
-            CAPSTONE/dist/CAPSTONE-*.pkg
+            CAPSTONE/dist/CAPSTONE-${{ steps.version.outputs.version }}.pkg
             CAPSTONE/dist/CAPSTONE-macOS-bundles.zip
           generate_release_notes: true
           body: |
-            ## CAPSTONE ${{ steps.version.outputs.version }}
-
-            Universal macOS installer for Apple Silicon and Intel.
-
-            Includes:
-            - Audio Unit for Logic Pro / GarageBand
-            - VST3 for Ableton Live, Cubase, Reaper, Studio One, etc.
-            - Standalone application
-
-            The package is unsigned unless the Developer ID GitHub secrets are configured.
+            Universal macOS installer for CAPSTONE.
+            Includes Audio Unit, VST3 and Standalone.
+            This build is unsigned unless Developer ID secrets are configured.
