@@ -1,0 +1,7 @@
+build/
+dist/
+JUCE/
+.DS_Store
+*.o
+*.pkg
+tests/dsp_test

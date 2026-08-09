@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Définition de l'installeur CAPSTONE : composants décochables, macOS 10.13+ -->
+<installer-gui-script minSpecVersion="2">
+    <title>CAPSTONE</title>
+    <organization>com.ateliercapstone</organization>
+
+    <options customize="always"
+             require-scripts="false"
+             rootVolumeOnly="true"
+             hostArchitectures="arm64,x86_64"/>
+
+    <volume-check>
+        <allowed-os-versions><os-version min="10.13"/></allowed-os-versions>
+    </volume-check>
+
+    <welcome    file="welcome.html"    mime-type="text/html"/>
+    <license    file="license.html"    mime-type="text/html"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+
+    <choices-outline>
+        <line choice="choice.au"/>
+        <line choice="choice.vst3"/>
+        <line choice="choice.app"/>
+    </choices-outline>
+
+    <choice id="choice.au"
+            title="Audio Unit (Logic Pro, GarageBand)"
+            description="Installe CAPSTONE.component dans /Library/Audio/Plug-Ins/Components. Requis pour Logic Pro."
+            start_selected="true">
+        <pkg-ref id="com.ateliercapstone.capstone.au"/>
+    </choice>
+
+    <choice id="choice.vst3"
+            title="VST3 (Ableton Live, Reaper, Cubase, Studio One…)"
+            description="Installe CAPSTONE.vst3 dans /Library/Audio/Plug-Ins/VST3."
+            start_selected="true">
+        <pkg-ref id="com.ateliercapstone.capstone.vst3"/>
+    </choice>
+
+    <choice id="choice.app"
+            title="Application autonome"
+            description="Installe CAPSTONE.app dans /Applications, pour traiter une entrée audio sans séquenceur."
+            start_selected="false">
+        <pkg-ref id="com.ateliercapstone.capstone.app"/>
+    </choice>
+
+    <pkg-ref id="com.ateliercapstone.capstone.au"   version="1.0.0" onConclusion="none">CAPSTONE-au.pkg</pkg-ref>
+    <pkg-ref id="com.ateliercapstone.capstone.vst3" version="1.0.0" onConclusion="none">CAPSTONE-vst3.pkg</pkg-ref>
+    <pkg-ref id="com.ateliercapstone.capstone.app"  version="1.0.0" onConclusion="none">CAPSTONE-app.pkg</pkg-ref>
+</installer-gui-script>

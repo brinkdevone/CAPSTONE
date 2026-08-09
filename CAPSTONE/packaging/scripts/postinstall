@@ -1,0 +1,19 @@
+#!/bin/bash
+# Post-installation : permissions + invalidation du cache Audio Unit.
+# Sans le killall, Logic Pro ne voit le plugin qu'après un redémarrage.
+set -u
+
+for p in "/Library/Audio/Plug-Ins/Components/CAPSTONE.component" \
+         "/Library/Audio/Plug-Ins/VST3/CAPSTONE.vst3" \
+         "/Applications/CAPSTONE.app"; do
+    if [ -e "$p" ]; then
+        /usr/sbin/chown -R root:admin "$p" 2>/dev/null || true
+        /bin/chmod -R 755 "$p" 2>/dev/null || true
+        /usr/bin/xattr -dr com.apple.quarantine "$p" 2>/dev/null || true
+    fi
+done
+
+# Force macOS à rescanner les Audio Units
+/usr/bin/killall -9 AudioComponentRegistrar 2>/dev/null || true
+
+exit 0
