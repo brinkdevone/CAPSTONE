@@ -44,11 +44,20 @@ target_compile_definitions(CAPSTONE PUBLIC
     JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_DISPLAY_SPLASH_SCREEN=0 JUCE_REPORT_APP_USAGE=0)
 
+# Les sources CAPSTONE sont UTF-8. Sur macOS, conserver explicitement cette
+# encodage au préprocesseur et dans les littéraux exécutables.
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
+    target_compile_options(CAPSTONE PRIVATE -finput-charset=UTF-8 -fexec-charset=UTF-8)
+endif()
+
 target_link_libraries(CAPSTONE PRIVATE juce::juce_audio_utils juce::juce_dsp
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
 
 add_executable(capstone_dsp_test tests/dsp_test.cpp)
 target_compile_features(capstone_dsp_test PRIVATE cxx_std_17)
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
+    target_compile_options(capstone_dsp_test PRIVATE -finput-charset=UTF-8 -fexec-charset=UTF-8)
+endif()
 enable_testing()
 add_test(NAME dsp COMMAND capstone_dsp_test)
